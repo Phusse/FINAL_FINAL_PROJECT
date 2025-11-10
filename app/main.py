@@ -4,7 +4,7 @@ from PIL import Image, ImageOps
 import io
 import torch
 from collections import Counter
-from model import load_model  # Make sure this points to your model.py
+from model import HandwritingClassifier.load_model  # Make sure this points to your model.py
 from utils import shred_full_page, preprocess_batch # Make sure this points to your utils.py
 import logging
 import sys
