@@ -132,7 +132,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
                 final_message = f"Weak match for {winner}. (Consensus: {consensus_score*100:.0f}%). Result is ambiguous."
             else: # Very weak match (e.g., 2 patches out of 50 voted for this person)
                 final_label = "Unrecognized"
-                final_message = f"Very weak match. Could not confidently identify {winner}. (Consensus: {consensus_score*100:.0f}%)"
+                final_message = f"Very weak match. Could not confidently identify. (Consensus: {consensus_score*100:.0f}%)"
 
         return JSONResponse(status_code=200, content={
             "label": final_label,
