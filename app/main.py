@@ -4,7 +4,7 @@ from PIL import Image, ImageOps
 import io
 import torch
 from collections import Counter
-from model import HandwritingClassifier  # Make sure this points to your model.py
+from model import load_model  # Make sure this points to your model.py
 from utils import shred_full_page, preprocess_batch # Make sure this points to your utils.py
 import logging
 import sys
@@ -23,7 +23,7 @@ app = FastAPI()
 
 logger.info("Starting API server...")
 try:
-    model = HandwritingClassifier.load_model()
+    model = load_model()
     logger.info("✅ Model loaded successfully.")
 except Exception as e:
     logger.error(f"🔥 FATAL ERROR: Could not load model. API will not work. Error: {e}", exc_info=True)
