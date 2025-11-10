@@ -14,6 +14,7 @@ TEST_DATA_DIR = '/content/Final_Project/data/handwriting_dataset_testing'
 MODEL_PATH = '/content/Final_Project/models/handwriting_model.pt'
 
 NUM_EPOCHS = 40
+NUM_EPOCHS = 40
 BATCH_SIZE = 32
 LEARNING_RATE = 1e-3
 
@@ -84,7 +85,6 @@ model.classifier[3] = nn.Sequential(
     nn.Dropout(0.5),
     nn.Linear(num_features, num_classes)
 )
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
@@ -141,8 +141,10 @@ print(f"\n✅ Best model saved with {best_val_acc:.2f}% accuracy.")
 # === TESTING ===
 if os.path.exists(TEST_DATA_DIR):
     print("\n🧪 Starting testing on NEW ready_for_testing data...")
+    print("\n🧪 Starting testing on NEW ready_for_testing data...")
     test_dataset = ImageFolder(TEST_DATA_DIR, transform=transform_eval)
     test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+    
     
     checkpoint = torch.load(MODEL_PATH, map_location=device)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -157,6 +159,7 @@ if os.path.exists(TEST_DATA_DIR):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
 
+    print(f"🎉 Final Test Accuracy: {100 * correct / total:.2f}%")
     print(f"🎉 Final Test Accuracy: {100 * correct / total:.2f}%")
 else:
     print(f"⚠️ Test folder not found at {TEST_DATA_DIR}")
