@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 
 // Define the shape of the data returned by the AI model
 interface PredictionResult {
@@ -105,12 +105,6 @@ const App: React.FC = () => {
     if (fileInput) {
         fileInput.value = ''; // Clear input element
     }
-  };
-
-  // Convert confidence (0.0 to 1.0) string to percentage string
-  const getConfidenceText = (conf: string): string => {
-    const percentage = (parseFloat(conf) * 100).toFixed(2);
-    return `${percentage}%`;
   };
 
   return (
