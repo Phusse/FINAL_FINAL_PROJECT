@@ -1,0 +1,42 @@
+2025-11-10T19:42:23.791Z Traceback (most recent call last):
+2025-11-10T19:42:23.791Z File "/usr/local/bin/uvicorn", line 8, in <module>
+2025-11-10T19:42:23.791Z sys.exit(main())
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/click/core.py", line 1161, in __call__
+2025-11-10T19:42:23.791Z return self.main(*args, **kwargs)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/click/core.py", line 1082, in main
+2025-11-10T19:42:23.791Z rv = self.invoke(ctx)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/click/core.py", line 1443, in invoke
+2025-11-10T19:42:23.791Z return ctx.invoke(self.callback, **ctx.params)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/click/core.py", line 788, in invoke
+2025-11-10T19:42:23.791Z return __callback(*args, **kwargs)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/main.py", line 423, in main
+2025-11-10T19:42:23.791Z run(
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/main.py", line 593, in run
+2025-11-10T19:42:23.791Z server.run()
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/server.py", line 67, in run
+2025-11-10T19:42:23.791Z return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/_compat.py", line 60, in asyncio_run
+2025-11-10T19:42:23.791Z return loop.run_until_complete(main)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/asyncio/base_events.py", line 647, in run_until_complete
+2025-11-10T19:42:23.791Z return future.result()
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/server.py", line 71, in serve
+2025-11-10T19:42:23.791Z await self._serve(sockets)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/server.py", line 78, in _serve
+2025-11-10T19:42:23.791Z config.load()
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/config.py", line 439, in load
+2025-11-10T19:42:23.791Z self.loaded_app = import_from_string(self.app)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/importer.py", line 22, in import_from_string
+2025-11-10T19:42:23.791Z raise exc from None
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/site-packages/uvicorn/importer.py", line 19, in import_from_string
+2025-11-10T19:42:23.791Z module = importlib.import_module(module_str)
+2025-11-10T19:42:23.791Z File "/usr/local/lib/python3.9/importlib/__init__.py", line 127, in import_module
+2025-11-10T19:42:23.791Z return _bootstrap._gcd_import(name[level:], package, level)
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+2025-11-10T19:42:23.791Z File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+2025-11-10T19:42:23.791Z File "/app/app/main.py", line 7, in <module>
+2025-11-10T19:42:23.791Z from model import HandwritingClassifier  # Make sure this points to your model.py
+2025-11-10T19:42:23.791Z ModuleNotFoundError: No module named 'model'
