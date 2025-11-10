@@ -1,0 +1,28 @@
+{
+    "data": {
+        "reg_number": "2020/241872",
+        "first_name": "Chidubem",
+        "last_name": "Egbo",
+        "middle_name": "Patrick",
+        "gender": "Male",
+        "level": "external",
+        "date_of_birth": "2003-03-04T00:00:00.000000Z",
+        "religion": "Christianity",
+        "nationality": "Nigeria",
+        "state_of_origin": "Enugu",
+        "lga_of_origin": "Enugu",
+        "state_of_residence": "Lagos",
+        "lga_of_residence": "Oshodi-isolo",
+        "permanent_address": "No 6 Chief Vitus Uzoh Okota Lagos",
+        "residential_address": "Alvan Hostel",
+        "guardian_name": "Patrick Egbo",
+        "guardian_phone_number": "8033362837",
+        "guardian_email": "dubemmegbo@gmail.com",
+        "passport_url": "https://res.cloudinary.com/dw0bfxebl/image/upload/v1709538037/ece23unn/students/gpxgyg7we1foxoip1mdv.jpg",
+        "created_at": "2024-03-04T08:40:37.000000Z",
+        "version": 1,
+        "phone_number": null,
+        "email": "dubemmegbo@gmail.com",
+        "accommodation": null
+    }
+}

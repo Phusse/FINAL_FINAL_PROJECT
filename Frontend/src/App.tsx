@@ -3,9 +3,17 @@ import { Upload, X, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-reac
 
 // Define the shape of the data returned by the AI model
 interface PredictionResult {
-  prediction: string;
-  confidence: string; // Stored as string for precision (e.g., "0.9876")
-  modelId: string;
+  label: string;
+  confidence: number;
+  message: string;
+  student_info?: {
+    reg_number?: string;
+    first_name?: string;
+    middle_name?: string;
+    last_name?: string;
+    level?: string;
+    error?: string;
+  };
 }
 
 // Main App Component (Fully compatible with Vite React setup)
@@ -55,42 +63,25 @@ const App: React.FC = () => {
     setError(null);
     setResult(null);
 
-    // --- START: API Mocking Section ---
     const formData = new FormData();
-    formData.append('image', file);
-
-    // Simulate Network Delay and AI Processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    formData.append('file', file);
 
     try {
-      // Simulate a successful JSON response from the AI model
-      const simulatedResponse: PredictionResult = {
-        prediction: 'Golden Retriever',
-        confidence: (Math.random() * 0.4 + 0.59).toFixed(4), // Random score between 59% and 99%
-        modelId: 'VGG16-FineTuned-v2'
-      };
-
-      setResult(simulatedResponse);
-
-      // Example of actual API call structure (if this were real):
-      /*
-      // Assuming your Vite proxy handles routing this to a Python backend:
-      const apiResponse = await fetch('/api/predict', {
+      const apiResponse = await fetch('https://dubem.getmusterup.com/predict', {
         method: 'POST',
-        body: formData, // FormData sends the file correctly
+        body: formData,
       });
 
       if (!apiResponse.ok) {
-        throw new Error(`Server responded with status: ${apiResponse.status}`);
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.detail || `Server responded with status: ${apiResponse.status}`);
       }
 
       const data: PredictionResult = await apiResponse.json();
       setResult(data);
-      */
 
     } catch (err: unknown) {
       console.error("Upload Error:", err);
-      // Safely check if error is an instance of Error
       if (err instanceof Error) {
         setError(`Failed to connect to the AI model server: ${err.message}`);
       } else {
@@ -99,7 +90,6 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
-    // --- END: API Mocking Section ---
   };
 
   /**
@@ -124,138 +114,141 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl bg-white shadow-2xl rounded-xl p-8 border border-indigo-100">
+    <div className="min-h-screen bg-gray-100 text-gray-800 font-sans">
+      <main className="container mx-auto p-4 md:p-8">
+        <div className="max-w-4xl mx-auto">
+          <header className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Handwriting Verification</h1>
+            <p className="text-lg text-gray-600 mt-2">Upload a document to verify the author's handwriting against our records.</p>
+          </header>
 
-        <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6 flex items-center justify-center">
-          <ImageIcon className="w-8 h-8 mr-3" />
-          AI Confidence Scorer
-        </h1>
-        <p className="text-center text-gray-500 mb-8">
-          Upload an image to get a prediction and confidence score from the model.
-        </p>
-
-        {/* File Input Area */}
-        <div className="border-2 border-dashed border-indigo-300 rounded-lg p-6 bg-indigo-50 transition duration-300 hover:border-indigo-500">
-          <input
-            id="file-input"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <label
-            htmlFor="file-input"
-            className="cursor-pointer flex flex-col items-center justify-center"
-          >
-            <Upload className="w-10 h-10 text-indigo-500 mb-2" />
-            <p className="text-sm text-indigo-700 font-semibold">
-              {file ? file.name : 'Click to select image or drag and drop'}
-            </p>
-            <p className="text-xs text-gray-500">
-              (JPG, PNG, up to 10MB recommended)
-            </p>
-          </label>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 mt-6">
-          <button
-            onClick={handleUpload}
-            disabled={!file || loading}
-            className={`flex-1 flex items-center justify-center py-3 px-4 rounded-lg text-white font-medium transition duration-200
-              ${!file || loading
-                ? 'bg-indigo-300 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 shadow-md hover:shadow-lg'
-              }`}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              'Run AI Analysis'
-            )}
-          </button>
-
-          <button
-            onClick={handleClear}
-            disabled={!file}
-            className={`py-3 px-4 rounded-lg border text-sm font-medium transition duration-200
-              ${!file
-                ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                : 'border-gray-300 text-gray-600 hover:bg-gray-100'
-              }`}
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Image Preview and Results Area */}
-        <div className="mt-8 grid md:grid-cols-2 gap-6">
-          {/* Preview Card */}
-          <div className="bg-gray-100 p-4 rounded-lg shadow-inner flex flex-col items-center">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">Image Preview</h2>
-            <div className="w-full h-48 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Selected Preview"
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <p className="text-gray-400 text-sm">No image selected</p>
-              )}
-            </div>
-          </div>
-
-          {/* Results Card */}
-          <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">Analysis Result</h2>
-            <div className="h-48 flex flex-col justify-center items-center">
-              {error && (
-                <div className="text-red-600 text-center p-3 bg-red-50 rounded-md">
-                  <p className="font-semibold">Error:</p>
-                  <p className="text-sm">{error}</p>
-                </div>
-              )}
-
-              {loading && (
-                <p className="text-gray-500 flex items-center">
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin text-indigo-500" />
-                  Running model...
-                </p>
-              )}
-
-              {result && !loading && (
-                <div className="w-full text-left p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                  <div className="flex items-center mb-3">
-                    <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
-                    <h3 className="text-xl font-bold text-green-700">Prediction Found!</h3>
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Left Side: Uploader and Preview */}
+              <div className="flex flex-col">
+                <div
+                  className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300"
+                  onClick={() => document.getElementById('file-input')?.click()}
+                >
+                  <input
+                    id="file-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Upload className="w-12 h-12 text-gray-400 mb-4" />
+                    <p className="font-semibold text-gray-700">
+                      {file ? file.name : 'Click to upload or drag and drop'}
+                    </p>
+                    <p className="text-sm text-gray-500">PNG, JPG, WEBP (max. 10MB)</p>
                   </div>
-                  <p className="text-sm text-gray-700 mb-2">
-                    <span className="font-medium">Predicted Class:</span>
-                    <span className="ml-2 font-bold text-indigo-700">{result.prediction}</span>
-                  </p>
-                  <p className="text-sm text-gray-700">
-                    <span className="font-medium">Confidence Score:</span>
-                    <span className="ml-2 font-bold text-xl text-green-600">{getConfidenceText(result.confidence)}</span>
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Model: {result.modelId}
-                  </p>
                 </div>
-              )}
 
-              {!file && !loading && !result && !error && (
-                 <p className="text-gray-400 text-center">Awaiting image upload.</p>
-              )}
+                {previewUrl && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold text-lg mb-2">Image Preview</h3>
+                    <div className="bg-gray-100 rounded-lg p-2 border">
+                      <img
+                        src={previewUrl}
+                        alt="Selected Preview"
+                        className="w-full h-auto max-h-64 object-contain rounded"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-4 mt-6">
+                  <button
+                    onClick={handleUpload}
+                    disabled={!file || loading}
+                    className="flex-1 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-md"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        <span>Verifying...</span>
+                      </>
+                    ) : (
+                      'Verify Handwriting'
+                    )}
+                  </button>
+                  {file && (
+                    <button
+                      onClick={handleClear}
+                      className="p-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      <X />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Side: Results */}
+              <div className="bg-gray-50 rounded-xl p-6 border">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Verification Result</h2>
+                <div className="h-full flex flex-col justify-center">
+                  {error && (
+                    <div className="text-center p-4 bg-red-100 text-red-700 rounded-lg">
+                      <p className="font-bold">Error</p>
+                      <p>{error}</p>
+                    </div>
+                  )}
+                  {loading && (
+                    <div className="text-center text-gray-500">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                      <p>Analyzing image...</p>
+                    </div>
+                  )}
+                  {!loading && !error && !result && (
+                    <div className="text-center text-gray-500">
+                      <ImageIcon className="w-12 h-12 mx-auto mb-2" />
+                      <p>Results will be displayed here.</p>
+                    </div>
+                  )}
+                  {result && (
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-sm text-gray-500">Verdict</p>
+                        <p className={`text-2xl font-bold ${result.label === 'Unrecognized' ? 'text-red-600' : 'text-green-600'}`}>
+                          {result.label}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">{result.message}</p>
+                      </div>
+
+                      {result.student_info && !result.student_info.error && (
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Student Information</h3>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="font-semibold text-gray-600">Full Name:</span>
+                              <span className="text-gray-900">{`${result.student_info.first_name || ''} ${result.student_info.middle_name || ''} ${result.student_info.last_name || ''}`}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-semibold text-gray-600">Reg. Number:</span>
+                              <span className="text-gray-900">{result.student_info.reg_number}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="font-semibold text-gray-600">Level:</span>
+                              <span className="text-gray-900">{result.student_info.level}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {result.student_info?.error && (
+                         <div className="text-center p-4 bg-yellow-100 text-yellow-700 rounded-lg">
+                           <p>{result.student_info.error}</p>
+                         </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-      </div>
+      </main>
     </div>
   );
 };

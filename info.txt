@@ -1,0 +1,29 @@
+Conversation opened. 1 read message.
+
+Skip to content
+Using Gmail with screen readers
+2 of 5,984
+(no subject)
+Inbox
+
+Daniel Owen <unlimiteddemi@gmail.com>
+Mon, Nov 10, 11:40 PM (37 minutes ago)
+to me
+
+82|Ln7hbUgm1xJAaQkHKD9oomRQmv93hmOOcPMeVQEG759b17c6
+
+https://api.eceunn.com/api/student/{reg_number}
+
+
+
+
+So herer ar ethingsa I want you to do
+
+creeate a in memory dict to hold the name of the filders of the people the model was trained one the dict wil contain their name which is the name of each folders inside trainig dataset as the key and theoir reg number as value which i will input my self
+
+
+secondly improve te frontend ui to match the api , it should be standard good and not look bad if you are using any icons make sure it is a node icon package for react
+
+so for the dict when the model predicts the winner or the person it thinks has the handwriting it takews that predicited person as they key to get the reg number it will send to the endpoint baove with that bearer token
+
+draft out your plan for carrying out this assignment i gave you i iwll approve then you can start

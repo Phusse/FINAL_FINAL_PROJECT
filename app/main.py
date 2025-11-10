@@ -8,6 +8,7 @@ from .model import load_model  # Make sure this points to your model.py
 from .utils import shred_full_page, preprocess_batch # Make sure this points to your utils.py
 import logging
 import sys
+import requests
 
 # --- Setup detailed logging ---
 # This will print INFO messages to your console
@@ -20,6 +21,32 @@ logger = logging.getLogger(__name__)
 # ---
 
 app = FastAPI()
+
+# --- User to Registration Number Mapping ---
+user_to_reg = {
+    "agino": "2020/AGINO",
+    "airma": "2020/AIRMA",
+    "bright": "2020/BRIGHT",
+    "chigbo": "2020/CHIGBO",
+    "chisom": "2020/CHISOM",
+    "christabel": "2020/CHRISTABEL",
+    "dave": "2020/DAVE",
+    "david_praise": "2020/DAVID_PRAISE",
+    "divine": "2020/DIVINE",
+    "dubem": "2020/DUBEM",
+    "Goodness": "2020/GOODNESS",
+    "Imelda": "2020/IMELDA",
+    "jayden": "2020/JAYDEN",
+    "joe": "2020/JOE",
+    "juliet": "2020/JULIET",
+    "nenye": "2020/NENYE",
+    "oma": "2020/OMA",
+    "onome": "2020/ONOME",
+    "ugochi": "2020/UGOCHI",
+}
+
+bearer_token = "82|Ln7hbUgm1xJAaQkHKD9oomRQmv93hmOOcPMeVQEG759b17c6"
+# ---
 
 logger.info("Starting API server...")
 try:
@@ -134,11 +161,32 @@ async def predict_handwriting(file: UploadFile = File(...)):
                 final_label = "Unrecognized"
                 final_message = f"Very weak match. Could not confidently identify. (Consensus: {consensus_score*100:.0f}%)"
 
+        if winner in user_to_reg:
+            reg_number = user_to_reg[winner]
+            headers = {"Authorization": f"Bearer {bearer_token}"}
+            try:
+                response = requests.get(f"https://api.eceunn.com/api/student/{reg_number}", headers=headers)
+                response.raise_for_status()  # Raise an exception for bad status codes
+                student_data = response.json().get("data", {})
+                student_info = {
+                    "reg_number": student_data.get("reg_number"),
+                    "first_name": student_data.get("first_name"),
+                    "middle_name": student_data.get("middle_name"),
+                    "last_name": student_data.get("last_name"),
+                    "level": student_data.get("level"),
+                }
+            except requests.exceptions.RequestException as e:
+                logger.error(f"API request error: {e}", exc_info=True)
+                student_info = {"error": "Could not fetch student details."}
+        else:
+            student_info = {}
+
         return JSONResponse(status_code=200, content={
             "label": final_label,
             "confidence": round(consensus_score, 4),
             "message": final_message,
-            "debug_votes": dict(vote_counts)
+            "debug_votes": dict(vote_counts),
+            "student_info": student_info,
         })
     except Exception as e:
         logger.error(f"Voting/Tally error: {e}", exc_info=True)
