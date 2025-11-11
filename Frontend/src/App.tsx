@@ -67,7 +67,7 @@ const App: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const apiResponse = await fetch('/predict', {
+      const apiResponse = await fetch('https://dubem.getmusterup.com/predict', {
         method: 'POST',
         body: formData,
       });
