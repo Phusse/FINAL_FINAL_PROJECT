@@ -12,6 +12,7 @@ interface PredictionResult {
     middle_name?: string;
     last_name?: string;
     level?: string;
+    passport_url?: string;
     error?: string;
   };
 }
@@ -182,7 +183,12 @@ const App: React.FC = () => {
                   {/* Student Info (if available) */}
                   {result.student_info && !result.student_info.error && (
                     <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-                      <h3 className="font-semibold text-gray-700 mb-3 text-lg">Student Details</h3>
+                      <div className="flex items-center gap-4 mb-4">
+                        {result.student_info.passport_url && (
+                          <img src={result.student_info.passport_url} alt="Student Passport" className="w-16 h-16 rounded-full object-cover border-2 border-blue-200" />
+                        )}
+                        <h3 className="font-semibold text-gray-700 text-lg">Student Details</h3>
+                      </div>
                       <div className="text-sm space-y-2">
                         <div className="flex justify-between items-center">
                           <span className="text-gray-500">Full Name:</span>

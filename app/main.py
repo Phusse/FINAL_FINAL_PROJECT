@@ -191,6 +191,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
                     "middle_name": student_data.get("middle_name"),
                     "last_name": student_data.get("last_name"),
                     "level": student_data.get("level"),
+                    "passport_url": student_data.get("passport_url"),
                 }
             except requests.exceptions.RequestException as e:
                 logger.error(f"API request error: {e}", exc_info=True)
