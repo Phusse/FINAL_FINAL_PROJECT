@@ -199,7 +199,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
             student_info = {}
 
         return JSONResponse(status_code=200, content={
-            "label": final_label,
+            "label": final_label.capitalize(),
             "confidence": round(consensus_score, 4),
             "message": final_message,
             "debug_votes": dict(vote_counts),
