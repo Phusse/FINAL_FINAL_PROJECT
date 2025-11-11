@@ -1,4 +1,8 @@
 
-https://dubem.getmusterup.com/predict
+src/App.tsx:2:39 - error TS6133: 'ImageIcon' is declared but its value is never read.
 
-got hit with cors error 
+2 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+                                        ~~~~~~~~~
+
+
+Found 1 error.

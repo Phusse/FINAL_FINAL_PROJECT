@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 
 // Define the shape of the data returned by the AI model
 interface PredictionResult {
