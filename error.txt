@@ -1,8 +1,12 @@
+unlimiteddemi@FIrst:~/FINAL_FINAL_PROJECT/Frontend$ npm run build
 
-src/App.tsx:2:39 - error TS6133: 'ImageIcon' is declared but its value is never read.
+> final-year-project@0.0.0 build
+> tsc -b && vite build
 
-2 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
-                                        ~~~~~~~~~
+src/App.tsx:230:1 - error TS1128: Declaration or statement expected.
+
+230 };
+    ~
 
 
 Found 1 error.
