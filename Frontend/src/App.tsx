@@ -108,141 +108,95 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 font-sans">
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">Handwriting Verification</h1>
-            <p className="text-lg text-gray-600 mt-2">Upload a document to verify the author's handwriting against our records.</p>
-          </header>
+    <div className="min-h-screen bg-[#F7F7F8] font-sans flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white border border-gray-200 rounded-2xl shadow-lg text-center p-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Handwriting Verification</h1>
+          <p className="text-gray-500 mb-6">Upload an image to verify the writer's identity.</p>
 
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-200">
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Left Side: Uploader and Preview */}
-              <div className="flex flex-col">
-                <div
-                  className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-300"
-                  onClick={() => document.getElementById('file-input')?.click()}
-                >
-                  <input
-                    id="file-input"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <Upload className="w-12 h-12 text-gray-400 mb-4" />
-                    <p className="font-semibold text-gray-700">
-                      {file ? file.name : 'Click to upload or drag and drop'}
-                    </p>
-                    <p className="text-sm text-gray-500">PNG, JPG, WEBP (max. 10MB)</p>
-                  </div>
-                </div>
-
-                {previewUrl && (
-                  <div className="mt-6">
-                    <h3 className="font-semibold text-lg mb-2">Image Preview</h3>
-                    <div className="bg-gray-100 rounded-lg p-2 border">
-                      <img
-                        src={previewUrl}
-                        alt="Selected Preview"
-                        className="w-full h-auto max-h-64 object-contain rounded"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex gap-4 mt-6">
-                  <button
-                    onClick={handleUpload}
-                    disabled={!file || loading}
-                    className="flex-1 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center gap-2 shadow-md"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="animate-spin" />
-                        <span>Verifying...</span>
-                      </>
-                    ) : (
-                      'Verify Handwriting'
-                    )}
-                  </button>
-                  {file && (
-                    <button
-                      onClick={handleClear}
-                      className="p-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                    >
-                      <X />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Side: Results */}
-              <div className="bg-gray-50 rounded-xl p-6 border">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Verification Result</h2>
-                <div className="h-full flex flex-col justify-center">
-                  {error && (
-                    <div className="text-center p-4 bg-red-100 text-red-700 rounded-lg">
-                      <p className="font-bold">Error</p>
-                      <p>{error}</p>
-                    </div>
-                  )}
-                  {loading && (
-                    <div className="text-center text-gray-500">
-                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                      <p>Analyzing image...</p>
-                    </div>
-                  )}
-                  {!loading && !error && !result && (
-                    <div className="text-center text-gray-500">
-                      <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-                      <p>Results will be displayed here.</p>
-                    </div>
-                  )}
-                  {result && (
-                    <div className="space-y-6">
-                      <div>
-                        <p className="text-sm text-gray-500">Verdict</p>
-                        <p className={`text-2xl font-bold ${result.label === 'Unrecognized' ? 'text-red-600' : 'text-green-600'}`}>
-                          {result.label}
-                        </p>
-                        <p className="text-sm text-gray-600 mt-1">{result.message}</p>
-                      </div>
-
-                      {result.student_info && !result.student_info.error && (
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3">Student Information</h3>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="font-semibold text-gray-600">Full Name:</span>
-                              <span className="text-gray-900">{`${result.student_info.first_name || ''} ${result.student_info.middle_name || ''} ${result.student_info.last_name || ''}`}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-semibold text-gray-600">Reg. Number:</span>
-                              <span className="text-gray-900">{result.student_info.reg_number}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="font-semibold text-gray-600">Level:</span>
-                              <span className="text-gray-900">{result.student_info.level}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {result.student_info?.error && (
-                         <div className="text-center p-4 bg-yellow-100 text-yellow-700 rounded-lg">
-                           <p>{result.student_info.error}</p>
-                         </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* Uploader */}
+          {!previewUrl && (
+            <div
+              className="relative border-2 border-dashed border-gray-300 rounded-xl p-10 cursor-pointer hover:border-blue-500 bg-gray-50 transition-all"
+              onClick={() => document.getElementById('file-input')?.click()}
+            >
+              <input id="file-input" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+              <div className="flex flex-col items-center text-gray-500">
+                <Upload className="w-10 h-10 mb-3" />
+                <p className="font-semibold">Click to upload</p>
+                <p className="text-sm">PNG, JPG, WEBP</p>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Preview & Actions */}
+          {previewUrl && (
+            <div className="space-y-4">
+              <div className="bg-gray-100 rounded-lg p-2 border w-full aspect-video overflow-hidden">
+                <img src={previewUrl} alt="Preview" className="w-full h-full object-contain rounded" />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleUpload}
+                  disabled={loading}
+                  className="flex-1 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all flex items-center justify-center gap-2"
+                >
+                  {loading ? <Loader2 className="animate-spin" /> : 'Verify'}
+                </button>
+                <button onClick={handleClear} className="p-3 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
+                  <X />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+
+        {/* Results Panel */}
+        {result && !loading && (
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-lg p-8 mt-6 animate-fade-in">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Result</h2>
+            <div className="space-y-4">
+              {/* Verdict */}
+              <div className={`p-4 rounded-lg ${result.label === 'Unrecognized' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                <p className="font-bold text-lg">{result.label}</p>
+                <p className="text-sm">{result.message}</p>
+              </div>
+
+              {/* Student Info */}
+              {result.student_info && !result.student_info.error && (
+                <div>
+                  <h3 className="font-semibold text-gray-700 mb-2">Student Details</h3>
+                  <div className="text-sm space-y-2 text-left bg-gray-50 p-4 rounded-lg border">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Full Name:</span>
+                      <span className="font-medium text-gray-800">{`${result.student_info.first_name || ''} ${result.student_info.middle_name || ''} ${result.student_info.last_name || ''}`}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Reg. Number:</span>
+                      <span className="font-medium text-gray-800">{result.student_info.reg_number}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Level:</span>
+                      <span className="font-medium text-gray-800">{result.student_info.level}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+               {result.student_info?.error && (
+                  <div className="p-3 bg-yellow-100 text-yellow-800 rounded-lg text-sm">
+                    <p>{result.student_info.error}</p>
+                  </div>
+              )}
+            </div>
+          </div>
+        )}
+         {error && !loading && (
+            <div className="bg-red-100 border border-red-200 text-red-800 rounded-2xl shadow-lg p-8 mt-6 animate-fade-in">
+                 <p className="font-bold">Error</p>
+                 <p>{error}</p>
+            </div>
+         )}
+      </div>
     </div>
   );
 };

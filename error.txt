@@ -1,17 +1,4 @@
-unlimiteddemi@FIrst:~/FINAL_FINAL_PROJECT/Frontend$ npm run build
 
-> final-year-project@0.0.0 build
-> tsc -b && vite build
+https://dubem.getmusterup.com/predict
 
-src/App.tsx:2:21 - error TS6133: 'CheckCircle' is declared but its value is never read.
-
-2 import { Upload, X, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
-                      ~~~~~~~~~~~
-
-src/App.tsx:111:9 - error TS6133: 'getConfidenceText' is declared but its value is never read.
-
-111   const getConfidenceText = (conf: string): string => {
-            ~~~~~~~~~~~~~~~~~
-
-
-Found 2 errors.
+got hit with cors error 

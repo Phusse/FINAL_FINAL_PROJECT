@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from PIL import Image, ImageOps
+from fastapi.middleware.cors import CORSMiddleware
 import io
 import torch
 from collections import Counter
@@ -21,6 +22,22 @@ logger = logging.getLogger(__name__)
 # ---
 
 app = FastAPI()
+# --- CORS Middleware ---
+# --- CORS Middleware ---
+origins = [
+    "https://dubem1.getmusterup.com",
+    "http://localhost:6080", 
+    "http://34.16.148.208:9090" # for local development
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ---
 
 # --- User to Registration Number Mapping ---
 user_to_reg = {
