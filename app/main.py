@@ -62,7 +62,7 @@ user_to_reg = {
     "ugochi": "2020/243998",
 }
 
-bearer_token = "82|Ln7hbUgm1xJAaQkHKD9oomRQmv93hmOOcPMeVQEG759b17c6"
+bearer_token = "38|WnWJALrQQ5kiK4b52a2a7IKTMuGZNUC5RglXoXpFb265a3e9"
 # ---
 
 logger.info("Starting API server...")
