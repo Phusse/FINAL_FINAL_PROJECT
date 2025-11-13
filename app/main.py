@@ -24,12 +24,26 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 # --- CORS Middleware ---
 # --- CORS Middleware ---
+# --- CORS Middleware ---
 origins = [
-    "https://dubem1.getmusterup.com",
+    "https://api.eceexams.online",
     "http://localhost:6080", 
-    "http://34.16.148.208:9090" # for local development
+    "http://34.16.148.208:9090",
+    
+    # === ADD THESE TWO LINES ===
+    "http://localhost:5173",      # Your local Vite dev server
+    "http://127.0.0.1:5173"     # Also good to have
+    # ==========================
 ]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

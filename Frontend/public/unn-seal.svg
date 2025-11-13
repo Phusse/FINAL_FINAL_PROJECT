@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="University of Nigeria, Nsukka seal">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0%" stop-color="#0b6b3a"/>
+      <stop offset="100%" stop-color="#18a058"/>
+    </linearGradient>
+  </defs>
+  <rect width="120" height="120" rx="16" fill="#ffffff"/>
+  <circle cx="60" cy="50" r="34" fill="url(#g)" />
+  <text x="50%" y="50%" text-anchor="middle" dy="6" font-family="Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#fff">UNN</text>
+  <text x="50%" y="78%" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="8" fill="#0b6b3a">University of Nigeria, Nsukka</text>
+</svg>
