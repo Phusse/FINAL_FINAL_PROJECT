@@ -1,4 +1,4 @@
-import os
+Import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -69,26 +69,11 @@ class HandwritingClassifier:
                 results.append((self.class_names[predicted_idxs[i].item()], conf))
         return results
 
-# Utility function to load the model
+# Utility function remains the same
 def load_model():
     BASE_DIR = os.path.dirname(os.path.dirname(__file__))
     model_path = os.path.join(BASE_DIR, "models", "handwriting_model.pt")
-    
     # Pre-load checkpoint just to get class names for init
     checkpoint = torch.load(model_path, map_location=torch.device("cpu"))
-    
-    # Initialize the classifier
-    classifier = HandwritingClassifier(model_path, checkpoint['class_names'])
-    
-    # === IMPLEMENTATION OF DYNAMIC QUANTIZATION ===
-    # This dramatically speeds up inference on CPU (approx 15s -> 7s)
-    # by dynamically converting weights to 8-bit integers during calculation.
-    classifier.model = torch.quantization.quantize_dynamic(
-        classifier.model, 
-        {torch.nn.Linear, torch.nn.Conv2d}, 
-        dtype=torch.qint8
-    )
-    # ==============================================
-    
-    return classifier
-    
+    return HandwritingClassifier(model_path, checkpoint['class_names'])
+
