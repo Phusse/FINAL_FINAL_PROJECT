@@ -3,7 +3,6 @@ import {
   Upload,
   X,
   Loader2,
-  ShieldCheck,
   XCircle,
   FileCheck,
   CheckCircle,
