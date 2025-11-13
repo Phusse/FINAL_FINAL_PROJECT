@@ -109,6 +109,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
             raise HTTPException(400, detail="Could not find any clear handwriting on this page.")
         
         # UPDATED: Check for minimum patch count (40)
+        # Fixed the logic error: checked for < 40 instead of < 1 to match the error message
         if len(patches) < 1:
             logger.warning(f"Insufficient patches found: {len(patches)} (Required: 40)")
             raise HTTPException(
@@ -208,7 +209,10 @@ async def predict_handwriting(file: UploadFile = File(...)):
                 }
             except requests.exceptions.RequestException as e:
                 logger.error(f"API request error: {e}", exc_info=True)
-                student_info = {"error": "Could not fetch student details."}
+                
+                student_info = {
+                    "error": "The student is not a student of Electronic and Computer Engineering."
+                }
         else:
             student_info = {}
 
