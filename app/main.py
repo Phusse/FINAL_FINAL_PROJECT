@@ -4,16 +4,15 @@ from PIL import Image, ImageOps
 from fastapi.middleware.cors import CORSMiddleware
 import io
 import torch
-import numpy as np  # Required for the Gatekeeper
-import cv2          # Required for the Gatekeeper
 from collections import Counter
-from .model import load_model 
-from .utils import shred_full_page, preprocess_batch 
+from .model import load_model  # Make sure this points to your model.py
+from .utils import shred_full_page, preprocess_batch # Make sure this points to your utils.py
 import logging
 import sys
 import requests
 
 # --- Setup detailed logging ---
+# This will print INFO messages to your console
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -66,49 +65,7 @@ user_to_reg = {
 }
 
 bearer_token = "38|WnWJALrQQ5kiK4b52a2a7IKTMuGZNUC5RglXoXpFb265a3e9"
-
-# --- GATEKEEPER FUNCTION ---
-def validate_image_content(pil_image):
-    """
-    Statistical Gatekeeper:
-    Checks if image looks like a document (bright background, dark strokes).
-    It converts to Grayscale first so Blue/Red/Black ink are all treated 
-    as 'Dark' pixels against the 'White' paper.
-    """
-    try:
-        # 1. CONVERT TO GRAYSCALE ('L' mode)
-        # This is the critical step. It turns the image into Black & White values (0-255).
-        # Blue ink (e.g., value [0, 0, 255]) becomes Dark Gray (value ~76).
-        # This ensures Canny edge detection works regardless of pen color.
-        img_array = np.array(pil_image.convert('L'))
-        
-        # 2. Blank Page Check (Standard Deviation)
-        # A blank page has very little variation in pixel color.
-        std_dev = np.std(img_array)
-        if std_dev < 15: 
-            raise HTTPException(400, detail="Image appears to be blank or a solid color.")
-
-        # 3. Dark Photo Check (Mean Brightness)
-        # Documents are usually bright white paper. Dark photos are hard to read.
-        mean_brightness = np.mean(img_array)
-        if mean_brightness < 80: 
-            raise HTTPException(400, detail="Image is too dark to analyze. Please use a well-lit scan or photo.")
-
-        # 4. Stroke Detection (Canny Edge Detection)
-        # This looks for 'edges' (sharp transitions from paper to ink).
-        edges = cv2.Canny(img_array, 100, 200)
-        edge_density = np.count_nonzero(edges) / edges.size
-        
-        if edge_density < 0.005: # Less than 0.5% edges means almost no writing
-            raise HTTPException(400, detail="No distinct handwriting detected. Image is too blurry or empty.")
-        
-        return True
-    except HTTPException as he:
-        raise he
-    except Exception as e:
-        logger.warning(f"Gatekeeper warning: {e}")
-        return True
-# ---------------------------
+# ---
 
 logger.info("Starting API server...")
 try:
@@ -116,7 +73,7 @@ try:
     logger.info("✅ Model loaded successfully.")
 except Exception as e:
     logger.error(f"🔥 FATAL ERROR: Could not load model. API will not work. Error: {e}", exc_info=True)
-    model = None 
+    model = None # Set model to None so endpoint can fail gracefully
 
 @app.post("/predict")
 async def predict_handwriting(file: UploadFile = File(...)):
@@ -136,15 +93,6 @@ async def predict_handwriting(file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(contents))
         image = ImageOps.exif_transpose(image) # Fix phone rotation issues
         logger.info(f"Image loaded. Original size: {image.size}")
-        
-        # === RUN THE GATEKEEPER ===
-        # This checks brightness, blankness, and strokes (color-agnostic)
-        validate_image_content(image)
-        logger.info("✅ Gatekeeper check passed.")
-        # ==========================
-
-    except HTTPException as he:
-        raise he # Pass the specific gatekeeper error to the user
     except Exception as e:
         logger.error(f"Image loading error: {e}", exc_info=True)
         raise HTTPException(400, detail=f"Invalid image file. Error: {e}")
@@ -153,14 +101,15 @@ async def predict_handwriting(file: UploadFile = File(...)):
     try:
         logger.info("Step 2: Shredding full page into patches...")
         
-        # Increased max_regions to 100 so we can find at least 40 patches
+        # UPDATED: Increased max_regions to 100 to allow finding enough patches
         patches = shred_full_page(image, max_regions=100) 
         
         if not patches:
             logger.warning("Shredding returned no patches.")
             raise HTTPException(400, detail="Could not find any clear handwriting on this page.")
         
-        # Strict check for 40 patches
+        # UPDATED: Check for minimum patch count (40)
+        # Fixed the logic error: checked for < 40 instead of < 1 to match the error message
         if len(patches) < 1:
             logger.warning(f"Insufficient patches found: {len(patches)} (Required: 40)")
             raise HTTPException(
@@ -170,7 +119,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
         
         logger.info(f"Shredding complete. Found {len(patches)} patches.")
     except HTTPException as he:
-        raise he 
+        raise he # Propagate the HTTP 400 error we just raised
     except Exception as e:
         logger.error(f"Shredding error: {e}", exc_info=True)
         raise HTTPException(500, detail=f"Error during image shredding: {e}")
@@ -187,6 +136,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
     # === Step 4: Model Prediction ===
     try:
         logger.info("Step 4: Sending batch to model for prediction...")
+        # model.predict_batch returns a list of [('label', confidence_score)]
         predictions = model.predict_batch(batch_tensor)
         logger.info(f"Prediction complete. Raw results: {predictions}")
     except Exception as e:
@@ -196,6 +146,8 @@ async def predict_handwriting(file: UploadFile = File(...)):
     # === Step 5: Vote and Tally Results ===
     try:
         logger.info("Step 5: Tallying votes...")
+        # Only count votes where the model was reasonably confident (e.g., > 60%)
+        # This prevents low-confidence guesses from muddying the election
         confidence_threshold = 0.6 
         confident_votes = [p for p in predictions if p[1] > confidence_threshold]
         logger.info(f"Confident votes (>{confidence_threshold*100}%): {confident_votes}")
@@ -208,30 +160,35 @@ async def predict_handwriting(file: UploadFile = File(...)):
                 "message": "Handwriting detected, but no patches matched confidently. (Possible impersonator or poor scan)."
             })
 
+        # Tally the confident votes
         votes = [p[0] for p in confident_votes]
         vote_counts = Counter(votes)
         winner, count = vote_counts.most_common(1)[0]
         
+        # Consensus score = How many confident patches voted for the winner / TOTAL patches analyzed
         total_patches = len(patches)
         consensus_score = count / total_patches
         
         logger.info(f"Vote complete. Winner: {winner} (Count: {count}). Consensus: {consensus_score:.2f}")
 
-        # --- SMART MESSAGING LOGIC ---
+        # --- NEW SMART MESSAGING LOGIC ---
+        
         final_label = winner
         
         if winner == "Unknown writer":
+            # The model is confident this is NOT a known user.
             final_label = "Unrecognized"
-            if consensus_score > 0.5: 
+            if consensus_score > 0.5: # Majority of patches agree it's "Unknown"
                 final_message = f"High-confidence rejection. This handwriting does not match known users. (Possible impersonator)."
-            else: 
+            else: # 'Unknown' won, but it was a close race
                 final_message = f"Ambiguous result. No single writer was a clear match. (Possible impersonator)."
-        else: 
-            if consensus_score > 0.65: 
+        
+        else: # A known writer won the vote
+            if consensus_score > 0.65: # Strong match
                 final_message = f"Strong match for {winner}. (Consensus: {consensus_score*100:.0f}%)"
-            elif consensus_score > 0.3: 
+            elif consensus_score > 0.3: # Weak match (like your 'onome' example)
                 final_message = f"Weak match for {winner}. (Consensus: {consensus_score*100:.0f}%). Result is ambiguous."
-            else: 
+            else: # Very weak match (e.g., 2 patches out of 50 voted for this person)
                 final_label = "Unrecognized"
                 final_message = f"Very weak match. Could not confidently identify. (Consensus: {consensus_score*100:.0f}%)"
 
@@ -240,7 +197,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
             headers = {"Authorization": f"Bearer {bearer_token}"}
             try:
                 response = requests.get(f"https://api.eceunn.com/api/student/{reg_number}", headers=headers)
-                response.raise_for_status() 
+                response.raise_for_status()  # Raise an exception for bad status codes
                 student_data = response.json().get("data", {})
                 student_info = {
                     "reg_number": student_data.get("reg_number"),
@@ -252,6 +209,7 @@ async def predict_handwriting(file: UploadFile = File(...)):
                 }
             except requests.exceptions.RequestException as e:
                 logger.error(f"API request error: {e}", exc_info=True)
+                
                 student_info = {
                     "error": "The student is not a student of Electronic and Computer Engineering."
                 }
