@@ -26,7 +26,7 @@ app = FastAPI()
 # --- CORS Middleware ---
 # --- CORS Middleware ---
 origins = [
-    "https://api.eceexams.online",
+    "https://eceexams.online",
     "http://localhost:6080", 
     "http://34.16.148.208:9090",
     
