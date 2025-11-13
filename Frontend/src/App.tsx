@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { Upload, X, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Upload, X, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import blobberLogo from '/Elegant_Minimalist_Calligraphy_Initials_logo__1_-removebg-preview.png';
+import './App.css';
 
 // Define the shape of the data returned by the AI model
 interface PredictionResult {
@@ -25,6 +27,7 @@ const App: React.FC = () => {
   const [result, setResult] = useState<PredictionResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [animatedConfidence, setAnimatedConfidence] = useState<number>(0);
 
   /**
    * Handles file selection, setting the file state and creating a temporary
@@ -64,25 +67,70 @@ const App: React.FC = () => {
     setError(null);
     setResult(null);
 
+    // --- START: API Mocking Section ---
     const formData = new FormData();
     formData.append('file', file);
 
+    // Simulate Network Delay and AI Processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     try {
-      const apiResponse = await fetch('https://dubem.getmusterup.com/predict', {
+      // Simulate a successful JSON response from the AI model
+      // const simulatedResponse: PredictionResult = {
+      //   label: 'Student Name',
+      //   confidence: Math.random() * 0.4 + 0.59, // Random score between 0.59 and 0.99
+      //   message: 'Handwriting successfully identified',
+      //   student_info: {
+      //     reg_number: '124323/22',
+      //     first_name: 'John',
+      //     middle_name: 'Doe',
+      //     last_name: 'Smith',
+      //     level: '300',
+      //     passport_url: 'https://example.com/passport.jpg',
+      //   },
+      // };
+
+      // setResult(simulatedResponse);
+
+      // Example of actual API call structure (if this were real):
+      
+      // Call the local API endpoint:
+      const apiResponse = await fetch('http://127.0.0.1:8000/predict', {
         method: 'POST',
-        body: formData,
+        body: formData, // FormData sends the file correctly
       });
+      console.log('Raw fetch response:', apiResponse);
+      const contentType = apiResponse.headers.get('content-type') || '';
+      console.log('Response content-type:', contentType);
+
+      // Read raw text first so we can inspect empty / non-json bodies
+      const text = await apiResponse.text();
+      console.log('Raw response text:', text);
 
       if (!apiResponse.ok) {
-        const errorData = await apiResponse.json();
-        throw new Error(errorData.detail || `Server responded with status: ${apiResponse.status}`);
+        // include any response body in the error message for debugging
+        throw new Error(`Server responded with status: ${apiResponse.status} - ${text || 'no body'}`);
       }
 
-      const data: PredictionResult = await apiResponse.json();
+      if (!text) {
+        throw new Error('Empty response body from server');
+      }
+
+      let data: PredictionResult;
+      try {
+        // attempt to parse JSON
+        data = JSON.parse(text) as PredictionResult;
+      } catch (parseErr) {
+        console.error('Failed to parse JSON response:', parseErr);
+        throw new Error(`Invalid JSON from server. Received: ${text}`);
+      }
+
       setResult(data);
+      
 
     } catch (err: unknown) {
       console.error("Upload Error:", err);
+      // Safely check if error is an instance of Error
       if (err instanceof Error) {
         setError(`Failed to connect to the AI model server: ${err.message}`);
       } else {
@@ -91,6 +139,7 @@ const App: React.FC = () => {
     } finally {
       setLoading(false);
     }
+    // --- END: API Mocking Section ---
   };
 
   /**
@@ -108,124 +157,190 @@ const App: React.FC = () => {
     }
   };
 
+
+
+  // Animate confidence score
+  useEffect(() => {
+    if (result) {
+      const targetConfidence = result.confidence * 100;
+      setAnimatedConfidence(0);
+      const duration = 2000; // 2 seconds
+      const steps = 60;
+      const increment = targetConfidence / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= targetConfidence) {
+          setAnimatedConfidence(targetConfidence);
+          clearInterval(timer);
+        } else {
+          setAnimatedConfidence(current);
+        }
+      }, duration / steps);
+      return () => clearInterval(timer);
+    }
+  }, [result]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-sans flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-lg">
-        <header className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 leading-tight">Handwriting <span className="text-blue-600">Verifier</span></h1>
-          <p className="text-lg text-gray-600 mt-2">Securely authenticate documents by analyzing unique handwriting patterns.</p>
-        </header>
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-6xl bg-white shadow-2xl rounded-xl p-8 border border-indigo-100 relative">        
+        <div className="absolute top-8 left-8 w-30 h-40">
+          <img src={blobberLogo} alt="blubbai" className='logo'/>
+        </div>
+      
 
-        <div className="bg-white border border-gray-200 rounded-3xl shadow-xl p-6 sm:p-8 lg:p-10 text-center relative overflow-hidden">
-          {/* Decorative background element */}
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-50 to-transparent rounded-3xl opacity-50"></div>
+        <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6 flex items-center justify-center">
+          <ImageIcon className="w-8 h-8 mr-3" />
+          Handwriting Analysis Tool
+        </h1>
+        <p className="text-center text-gray-500 mb-8">
+          Upload a handwriting image to identify the student and get confidence scores.
+        </p>
 
-          <div className="relative z-10">
-            {/* Uploader Section */}
-            {!previewUrl && (
-              <div
-                className="border-2 border-dashed border-blue-300 rounded-2xl p-10 cursor-pointer hover:border-blue-500 bg-blue-50 transition-all duration-300 ease-in-out group"
-                onClick={() => document.getElementById('file-input')?.click()}
+        {/* Main Grid Layout */}
+        <div className="grid md:grid-cols-2 gap-8">
+
+          {/* Left Side: Upload and Preview */}
+          <div className="space-y-6">
+            {/* File Input Area */}
+            <div className="border-2 border-dashed border-indigo-300 rounded-lg p-6 bg-indigo-50 transition duration-300 hover:border-indigo-500">
+              <input
+                id="file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <label
+                htmlFor="file-input"
+                className="cursor-pointer flex flex-col items-center justify-center"
               >
-                <input id="file-input" type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
-                <div className="flex flex-col items-center text-blue-600 group-hover:text-blue-800 transition-colors duration-300">
-                  <Upload className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform duration-300" />
-                  <p className="font-semibold text-lg">Click to upload</p>
-                  <p className="text-sm text-gray-500 mt-1">PNG, JPG, WEBP (max. 10MB)</p>
-                </div>
+                <Upload className="w-10 h-10 text-indigo-500 mb-2" />
+                <p className="text-sm text-indigo-700 font-semibold">
+                  {file ? file.name : 'Click to select image or drag and drop'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  (JPG, PNG, up to 10MB recommended)
+                </p>
+              </label>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              <button
+                onClick={handleUpload}
+                disabled={!file || loading}
+                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-lg text-white font-medium transition-all duration-300 transform
+                  ${!file || loading
+                    ? 'bg-indigo-300 cursor-not-allowed scale-95'
+                    : 'bg-indigo-600 hover:bg-indigo-700 hover:scale-105 shadow-md hover:shadow-lg active:scale-95'
+                  }`}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  'Run AI Analysis'
+                )}
+              </button>
+
+              <button
+                onClick={handleClear}
+                disabled={!file}
+                className={`py-3 px-4 rounded-lg border text-sm font-medium transition-all duration-300 transform
+                  ${!file
+                    ? 'border-gray-200 text-gray-400 cursor-not-allowed scale-95'
+                    : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:scale-105 active:scale-95'
+                  }`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Image Preview */}
+            <div className="bg-gray-100 p-4 rounded-lg shadow-inner flex flex-col items-center">
+              <h2 className="text-lg font-semibold text-gray-700 mb-3">Image Preview</h2>
+              <div className="w-full h-64 bg-gray-200 rounded-md overflow-hidden flex items-center justify-center">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Selected Preview"
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <p className="text-gray-400 text-sm">No image selected</p>
+                )}
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Preview & Actions Section */}
-            {previewUrl && (
-              <div className="space-y-6">
-                <div className="bg-gray-100 rounded-xl p-3 border border-gray-200 w-full aspect-video flex items-center justify-center overflow-hidden shadow-inner">
-                  <img src={previewUrl} alt="Document Preview" className="max-w-full max-h-full object-contain rounded-lg" />
-                </div>
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleUpload}
-                    disabled={loading}
-                    className="flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition-all duration-300 ease-in-out flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
-                  >
-                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : <span className="text-lg">Verify Document</span>}
-                  </button>
-                  <button
-                    onClick={handleClear}
-                    className="p-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors duration-300 shadow-sm"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Loading State */}
-            {loading && (
-              <div className="absolute inset-0 bg-white bg-opacity-80 flex flex-col items-center justify-center rounded-3xl z-20 animate-fade-in">
-                <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-                <p className="text-xl font-semibold text-gray-700">Analyzing Handwriting...</p>
-                <p className="text-sm text-gray-500 mt-2">This may take a few moments.</p>
-              </div>
-            )}
-
-            {/* Results Panel */}
-            {result && !loading && (
-              <div className="mt-8 text-left animate-fade-in-up">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Outcome</h2>
-                <div className="space-y-5">
-                  {/* Verdict */}
-                  <div className={`p-4 rounded-xl ${result.label === 'Unrecognized' ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-green-50 text-green-800 border border-green-200'}`}>
-                    <p className="font-bold text-xl mb-1">{result.label}</p>
-                    <p className="text-sm">{result.message}</p>
-                  </div>
-
-                  {/* Student Info (if available) */}
-                  {result.student_info && !result.student_info.error && (
-                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-200 shadow-sm">
-                      <div className="flex items-center gap-4 mb-4">
-                        {result.student_info.passport_url && (
-                          <img src={result.student_info.passport_url} alt="Student Passport" className="w-16 h-16 rounded-full object-cover border-2 border-blue-200" />
-                        )}
-                        <h3 className="font-semibold text-gray-700 text-lg">Student Details</h3>
-                      </div>
-                      <div className="text-sm space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Full Name:</span>
-                          <span className="font-medium text-gray-800">{`${result.student_info.first_name || ''} ${result.student_info.middle_name || ''} ${result.student_info.last_name || ''}`}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Reg. Number:</span>
-                          <span className="font-medium text-gray-800">{result.student_info.reg_number}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-500">Level:</span>
-                          <span className="font-medium text-gray-800">{result.student_info.level}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {result.student_info?.error && (
-                    <div className="p-4 bg-yellow-50 text-yellow-800 rounded-xl border border-yellow-200 text-sm">
-                      <p className="font-semibold">Information Unavailable:</p>
-                      <p>{result.student_info.error}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* General Error Display */}
-            {error && !loading && (
-              <div className="mt-8 text-left animate-fade-in-up">
-                <div className="p-4 bg-red-50 text-red-800 rounded-xl border border-red-200">
-                  <p className="font-bold text-xl mb-1">Error Occurred</p>
+          {/* Right Side: Results and Student Details */}
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Analysis Result & Student Details</h2>
+            <div className="min-h-96 flex flex-col justify-center items-center">
+              {error && (
+                <div className="text-red-600 text-center p-4 bg-red-50 rounded-md w-full">
+                  <p className="font-semibold">Error:</p>
                   <p className="text-sm">{error}</p>
                 </div>
-              </div>
-            )}
+              )}
+
+              {loading && (
+                <p className="text-gray-500 flex items-center">
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin text-indigo-500" />
+                  Running model...
+                </p>
+              )}
+
+              {result && !loading && (
+                <div className="w-full text-left space-y-4">
+                  <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <div className="flex items-center mb-3">
+                      <CheckCircle className="w-6 h-6 text-green-600 mr-2" />
+                      <h3 className="text-xl font-bold text-green-700">Prediction Found!</h3>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium">Predicted Class:</span>
+                      <span className="ml-2 font-bold text-indigo-700">{result.label}</span>
+                    </p>
+                    <p className="text-sm text-gray-700 mb-2">
+                      <span className="font-medium">Confidence Score:</span>
+                      <span className="ml-2 font-bold text-xl text-green-600">{animatedConfidence.toFixed(2)}%</span>
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium">Message:</span>
+                      <span className="ml-2">{result.message}</span>
+                    </p>
+                  </div>
+
+                  {result.student_info && !result.student_info.error && (
+                    <div className="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <h4 className="text-lg font-semibold text-blue-700 mb-3">Student Details</h4>
+                      <div className="space-y-1 text-sm text-gray-700">
+                        <p><span className="font-medium">Reg Number:</span> {result.student_info.reg_number || 'N/A'}</p>
+                        <p><span className="font-medium">Name:</span> {`${result.student_info.first_name || ''} ${result.student_info.middle_name || ''} ${result.student_info.last_name || ''}`.trim() || 'N/A'}</p>
+                        <p><span className="font-medium">Level:</span> {result.student_info.level || 'N/A'}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {result.student_info?.error && (
+                    <div className="p-4 bg-yellow-50 rounded-lg border-l-4 border-yellow-500">
+                      <p className="text-sm text-yellow-700"><span className="font-medium">Info:</span> {result.student_info.error}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!file && !loading && !result && !error && (
+                <p className="text-gray-400 text-center">Awaiting image upload.</p>
+              )}
+            </div>
           </div>
         </div>
+
       </div>
     </div>
   );
