@@ -22,28 +22,16 @@ logger = logging.getLogger(__name__)
 # ---
 
 app = FastAPI()
-# --- CORS Middleware ---
-# --- CORS Middleware ---
+
 # --- CORS Middleware ---
 origins = [
     "https://eceexams.online",
     "http://localhost:6080", 
     "http://34.16.148.208:9090",
-    
-    # === ADD THESE TWO LINES ===
     "http://localhost:5173",      # Your local Vite dev server
-    "http://127.0.0.1:5173"     # Also good to have
-    # ==========================
+    "http://127.0.0.1:5173"     
 ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-# ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -112,14 +100,25 @@ async def predict_handwriting(file: UploadFile = File(...)):
     # === Step 2: Shred Image into Patches ===
     try:
         logger.info("Step 2: Shredding full page into patches...")
-        # We use the robust 'shred_full_page' which includes the grid fallback
-        patches = shred_full_page(image, max_regions=30)
+        
+        # UPDATED: Increased max_regions to 100 to allow finding enough patches
+        patches = shred_full_page(image, max_regions=100) 
         
         if not patches:
             logger.warning("Shredding returned no patches.")
             raise HTTPException(400, detail="Could not find any clear handwriting on this page.")
         
+        # UPDATED: Check for minimum patch count (40)
+        if len(patches) < 40:
+            logger.warning(f"Insufficient patches found: {len(patches)} (Required: 40)")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Image is not clear enough (only {len(patches)} text regions found). Please upload a valid, clearer, or fuller page of handwriting."
+            )
+        
         logger.info(f"Shredding complete. Found {len(patches)} patches.")
+    except HTTPException as he:
+        raise he # Propagate the HTTP 400 error we just raised
     except Exception as e:
         logger.error(f"Shredding error: {e}", exc_info=True)
         raise HTTPException(500, detail=f"Error during image shredding: {e}")
